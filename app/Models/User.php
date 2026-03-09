@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
 
 class User extends Authenticatable
 {
@@ -21,6 +23,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'plan',
     ];
 
     /**
@@ -44,5 +48,44 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // ─── Helpers ───────────────────────────────────────────
+
+    public function isPremium(): bool
+    {
+        return $this->plan === 'premium';
+    }
+
+    // ─── Relaciones ────────────────────────────────────────
+
+    public function medicalProfile()
+    {
+        return $this->hasOne(MedicalProfile::class);
+    }
+
+    public function emergencyContacts()
+    {
+        return $this->hasMany(EmergencyContact::class);
+    }
+
+    public function primaryContact()
+    {
+        return $this->hasOne(EmergencyContact::class)->where('is_primary', true);
+    }
+
+    public function qrToken()
+    {
+        return $this->hasOne(QrToken::class);
+    }
+
+    public function sosAlerts()
+    {
+        return $this->hasMany(SosAlert::class);
+    }
+
+    public function location()
+    {
+        return $this->hasOne(Location::class)->latest();
     }
 }
