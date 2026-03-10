@@ -35,6 +35,19 @@
             min-height: 100vh;
         }
 
+        /* ── Overlay mobile ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
         /* ── Sidebar ── */
         .sidebar {
             width: var(--sidebar-w);
@@ -47,6 +60,7 @@
             left: 0;
             bottom: 0;
             z-index: 50;
+            transition: transform 0.25s ease;
         }
 
         .sidebar-logo {
@@ -57,10 +71,23 @@
             padding: 0 24px 28px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .sidebar-logo span {
             color: var(--red);
+        }
+
+        .btn-close-sidebar {
+            display: none;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px;
         }
 
         .nav-item {
@@ -87,7 +114,7 @@
             background: rgba(229, 62, 62, 0.08);
         }
 
-        .nav-item .nav-icon {
+        .nav-icon {
             font-size: 18px;
         }
 
@@ -145,44 +172,65 @@
             gap: 8px;
             color: rgba(255, 255, 255, 0.4);
             font-size: 13px;
-            text-decoration: none;
-            transition: color 0.15s;
             background: none;
             border: none;
             cursor: pointer;
             width: 100%;
             padding: 8px 0;
+            transition: color 0.15s;
         }
 
         .btn-logout:hover {
             color: white;
         }
 
-        /* ── Main content ── */
+        /* ── Main ── */
         .main {
             margin-left: var(--sidebar-w);
             flex: 1;
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
 
+        /* ── Topbar ── */
         .topbar {
             background: white;
             border-bottom: 1px solid var(--border);
-            padding: 16px 32px;
+            padding: 14px 32px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .btn-hamburger {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--dark);
+            padding: 4px;
         }
 
         .page-title {
             font-family: 'Syne', sans-serif;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
         }
 
+        /* ── Content ── */
         .content {
-            padding: 32px;
+            padding: 28px 32px;
             flex: 1;
         }
 
@@ -193,6 +241,9 @@
             margin-bottom: 20px;
             font-size: 14px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .alert-success {
@@ -207,18 +258,78 @@
             border: 1px solid #fecaca;
         }
 
-        /* ── Mobile ── */
+        /* ── Bottom nav mobile ── */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--border);
+            z-index: 30;
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+        }
+
+        .bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            text-decoration: none;
+            color: var(--gray);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 10px;
+            transition: color 0.15s;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--red);
+        }
+
+        .bottom-nav-item .bnav-icon {
+            font-size: 20px;
+        }
+
+        /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
             .sidebar {
-                display: none;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .btn-close-sidebar {
+                display: block;
+            }
+
+            .btn-hamburger {
+                display: block;
             }
 
             .main {
                 margin-left: 0;
             }
 
+            .topbar {
+                padding: 12px 16px;
+            }
+
             .content {
-                padding: 20px 16px;
+                padding: 20px 16px 90px;
+            }
+
+            .bottom-nav {
+                display: block;
             }
         }
     </style>
@@ -227,21 +338,29 @@
 
 <body>
 
-    {{-- Sidebar --}}
-    <aside class="sidebar">
-        <div class="sidebar-logo"><span>Vida</span>QR</div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <span><span style="color:white">Vida</span>QR</span>
+            <button class="btn-close-sidebar" onclick="closeSidebar()">✕</button>
+        </div>
 
         <nav>
-            <a href="{{ route('dashboard') }}" class="nav-item @if (request()->routeIs('dashboard')) active @endif">
+            <a href="{{ route('dashboard') }}" class="nav-item @if (request()->routeIs('dashboard')) active @endif"
+                onclick="closeSidebar()">
                 <span class="nav-icon">🏠</span> Dashboard
             </a>
-            <a href="{{ route('profile.show') }}" class="nav-item @if (request()->routeIs('profile.*')) active @endif">
+            <a href="{{ route('profile.show') }}" class="nav-item @if (request()->routeIs('profile.*')) active @endif"
+                onclick="closeSidebar()">
                 <span class="nav-icon">🩺</span> Perfil Médico
             </a>
-            <a href="{{ route('contacts.index') }}" class="nav-item @if (request()->routeIs('contacts.*')) active @endif">
+            <a href="{{ route('contacts.index') }}" class="nav-item @if (request()->routeIs('contacts.*')) active @endif"
+                onclick="closeSidebar()">
                 <span class="nav-icon">👥</span> Contactos
             </a>
-            <a href="{{ route('qr.show') }}" class="nav-item @if (request()->routeIs('qr.*')) active @endif">
+            <a href="{{ route('qr.show') }}" class="nav-item @if (request()->routeIs('qr.*')) active @endif"
+                onclick="closeSidebar()">
                 <span class="nav-icon">📱</span> Mi QR
             </a>
         </nav>
@@ -263,10 +382,12 @@
         </div>
     </aside>
 
-    {{-- Main --}}
     <main class="main">
         <div class="topbar">
-            <div class="page-title">@yield('title', 'Dashboard')</div>
+            <div class="topbar-left">
+                <button class="btn-hamburger" onclick="openSidebar()">☰</button>
+                <div class="page-title">@yield('title', 'Dashboard')</div>
+            </div>
             @yield('topbar-actions')
         </div>
 
@@ -282,7 +403,39 @@
         </div>
     </main>
 
+    {{-- Bottom nav mobile --}}
+    <nav class="bottom-nav">
+        <div class="bottom-nav-items">
+            <a href="{{ route('dashboard') }}" class="bottom-nav-item @if (request()->routeIs('dashboard')) active @endif">
+                <span class="bnav-icon">🏠</span> Inicio
+            </a>
+            <a href="{{ route('profile.show') }}"
+                class="bottom-nav-item @if (request()->routeIs('profile.*')) active @endif">
+                <span class="bnav-icon">🩺</span> Perfil
+            </a>
+            <a href="{{ route('contacts.index') }}"
+                class="bottom-nav-item @if (request()->routeIs('contacts.*')) active @endif">
+                <span class="bnav-icon">👥</span> Contactos
+            </a>
+            <a href="{{ route('qr.show') }}" class="bottom-nav-item @if (request()->routeIs('qr.*')) active @endif">
+                <span class="bnav-icon">📱</span> Mi QR
+            </a>
+        </div>
+    </nav>
+
     <script>
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js');
         }
