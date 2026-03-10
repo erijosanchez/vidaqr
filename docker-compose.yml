@@ -36,8 +36,8 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: vidaqr_db
-      MYSQL_ROOT_PASSWORD: R00t#Vq7$zX3mP1wN
-      MYSQL_PASSWORD: Vq#8mK2$pL9xR4nT
+      MYSQL_ROOT_PASSWORD: RootVidaqr202432
+      MYSQL_PASSWORD: VidaqrAdmin2024643
       MYSQL_USER: vidaqr_admin
     ports:
       - "3307:3306"        # 3307 para no chocar con MySQL local
